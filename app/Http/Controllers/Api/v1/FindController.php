@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\AddressObjInAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Liquetsoft\Fias\Laravel\LiquetsoftFiasBundle\Entity\AddrObj;
 use Liquetsoft\Fias\Laravel\LiquetsoftFiasBundle\Entity\AddrObjTypes;
@@ -85,11 +86,9 @@ class FindController extends Controller
 
     private function findHouse(int $objectid)
     {
-        $house = Houses::query()
+        $house = DB::connection('aokb')->table('fias_laravel_houses')
             ->where('objectid', $objectid)
             ->first();
-
-        dd($house);
 
         $houseType = HouseTypes::query()
             ->where('id', $house->housetype)
@@ -100,6 +99,7 @@ class FindController extends Controller
 
     public function findAdm(Request $request)
     {
+        return Address::search($request->input('search'))->get();
         $adms = collect();
 
         AdmHierarchy::query()
@@ -144,7 +144,6 @@ class FindController extends Controller
                             }
                             // Здание (строение), сооружение
                             case 10: {
-                                dd($pathPoint);
                                 $entity = $this->findHouse($pathPoint);
 //                                $addressParts->push([
 //                                  'addr_obj_id' => $entity->id,

@@ -181,28 +181,27 @@ return [
         ],
         // 'max_total_results' => env('TYPESENSE_MAX_TOTAL_RESULTS', 1000),
         'model-settings' => [
-            // User::class => [
-            //     'collection-schema' => [
-            //         'fields' => [
-            //             [
-            //                 'name' => 'id',
-            //                 'type' => 'string',
-            //             ],
-            //             [
-            //                 'name' => 'name',
-            //                 'type' => 'string',
-            //             ],
-            //             [
-            //                 'name' => 'created_at',
-            //                 'type' => 'int64',
-            //             ],
-            //         ],
-            //         'default_sorting_field' => 'created_at',
-            //     ],
-            //     'search-parameters' => [
-            //         'query_by' => 'name'
-            //     ],
-            // ],
+             \App\Models\Address::class => [
+                 'collection-schema' => [
+                     'fields' => [
+                         [
+                             'name' => 'full_name',
+                             'type' => 'string',
+                         ],
+                         [
+                             'name' => 'created_at',
+                             'type' => 'int64',
+                         ],
+                     ],
+                     'default_sorting_field' => 'created_at',
+                 ],
+                 'search-parameters' => [
+                     'query_by' => "full_name",
+                     'query_by_weights' => 0,
+                     'facet_sample_threshold' => 1000,
+                     'facet_sample_percent' => 20,
+                 ],
+             ],
         ],
     ],
 

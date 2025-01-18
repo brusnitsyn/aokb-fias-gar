@@ -97,6 +97,21 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'aokb' => [
+            'driver' => 'pgsql',
+            'url' => env('AOKB_DB_URL'),
+            'host' => env('AOKB_DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('AOKB_DB_DATABASE', 'laravel'),
+            'username' => env('AOKB_DB_USERNAME', 'root'),
+            'password' => env('AOKB_DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
