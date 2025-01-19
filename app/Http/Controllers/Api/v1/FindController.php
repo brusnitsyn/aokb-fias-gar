@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\AddressObjInAddress;
+use App\Models\AdmAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -86,9 +87,11 @@ class FindController extends Controller
 
     private function findHouse(int $objectid)
     {
-        $house = DB::connection('aokb')->table('fias_laravel_houses')
+        $house = Houses::query()
             ->where('objectid', $objectid)
             ->first();
+
+        dd($house);
 
         $houseType = HouseTypes::query()
             ->where('id', $house->housetype)
@@ -97,109 +100,108 @@ class FindController extends Controller
         return "$houseType->shortname $house->housenum";
     }
 
+    private function findFullType(string $typename)
+    {
+        return AddrObjTypes::where('typename', $typename)
+            ->where('enddate', '>', now())
+            ->first();
+    }
+
     public function findAdm(Request $request)
     {
-        return Address::search($request->input('search'))->get();
+        return AdmAddress::search($request->input('search'))->options([
+            'filter_by' => 'level:=5'
+        ])
+            ->get();
         $adms = collect();
 
-        AdmHierarchy::query()
-            ->chunk(100, function ($adm) use ($adms) {
-                foreach ($adm as $admObj) {
-                    $pathPoints = explode('.', $admObj->path);
-                    $fullName = collect();
-                    $addressParts = collect();
-
-                    foreach ($pathPoints as $pathPoint) {
-                        // Определить, что за обьект
-                        $reestr = ReestrObjects::query()
-                            ->where('objectid', $pathPoint)
-                            ->where('isactive', 1)
-                            ->select(['levelid'])
-                            ->first();
-
-                        switch ($reestr->levelid) {
-                            // Субъект РФ
-                            case 1: {
-                                $entity = $this->findAddrObj($pathPoint);
-
-                                $fullName->push("$entity->name $entity->typename");
-                                $addressParts->push([
-                                    'addr_obj_id' => $entity->id,
-                                ]);
-                                break;
-                            }
-                            /*
-                             * Город
-                             * Элемент улично-дорожной сети
-                             */
-                            case 5:
-                            case 8: {
-                                $entity = $this->findAddrObj($pathPoint);
-
-                                $fullName->push("$entity->typename $entity->name");
-                                $addressParts->push([
-                                    'addr_obj_id' => $entity->id,
-                                ]);
-                                break;
-                            }
-                            // Здание (строение), сооружение
-                            case 10: {
-                                $entity = $this->findHouse($pathPoint);
-//                                $addressParts->push([
-//                                  'addr_obj_id' => $entity->id,
-//                                ]);
-                                $fullName->push("$entity");
-                                break;
-                            }
-                        }
-
-//                        $entity = AddrObj::query()
-//                            ->where('objectid', $pathPoint)
-//                            ->first();
+        /*
+         * Регионы
+         */
+//        $regions = AddrObj::query()
+//            ->where('level', 1)
+//            ->where('enddate', '>', now())
+//            ->get(); // Уровень 1 — регионы
 //
-//                        $hasFindObjType = AddrObjTypes::query()
-//                            ->where('level', $entity->level)
-//                            ->first();
+//        foreach ($regions as $region) {
+//            $regionFullName = Param::where('objectid', $region->objectid)
+//                ->where('typeid', 16) // Офф. наименование
+//                ->where('enddate', '>', now())
+//                ->first();
+//            $regionFullName = $regionFullName->value;
 //
-//                        if ($hasFindObjType) {
-//                            if ($entity->level == 1) {
-//                                $fullName->push("$entity->name $entity->typename");
-//                            } else {
-//                                $addressParts->push([
-//                                    'addr_obj_id' => $entity->id,
-//                                ]);
-//                                $fullName->push("$entity->typename $entity->name");
-//                            }
-//                        } else {
-//                            $entity = Houses::query()
-//                                ->where('objectid', $pathPoint)
-//                                ->first();
+//            Region::updateOrCreate(
+//                ['objectid' => $region->objectid],
+//                [
+//                    'objectid' => $region->objectid,
+//                    'objectguid' => $region->objectguid,
+//                    'name' => $region->name,
+//                    'name_full' => $regionFullName,
+//                    'typename' => $region->typename,
+//                    'updatedate' => $region->updatedate,
+//                    'enddate' => $region->enddate,
+//                    'isactual' => $region->isactual,
+//                    'isactive' => $region->isactive,
+//                ]
+//            );
+//        }
 //
-//                            if ($entity) {
-//                                $fullName->push("$entity->typename $entity->name");
-//                            }
-//                        }
-                    }
-
-                    $address = Address::create([
-                        'objectid' => $admObj->objectid,
-                        'parentobjid' => $admObj->parentobjid,
-                        'path' => $admObj->path,
-                        'full_name' => $fullName->implode(', '),
-                        'isactive' => $admObj->isactive,
-                        'regioncode' => $admObj->regioncode,
-                        'citycode' => $admObj->citycode,
-                        'placecode' => $admObj->placecode,
-                        'plancode' => $admObj->plancode,
-                        'streetcode' => $admObj->streetcode,
-                        'updatedate' => $admObj->updatedate,
-                        'startdate' => $admObj->startdate,
-                        'enddate' => $admObj->enddate,
-                    ]);
-
-                    $address->addressParts()->createMany($addressParts);
-                }
-            });
+//        /*
+//         * Муниципальное деление
+//         */
+//        AddrObj::query()
+//            ->where('level', 3)
+//            ->where('enddate', '>', now())
+//            ->chunk(300, function ($municipalDistricts) {
+//                foreach ($municipalDistricts as $municipalDistrict) {
+//                    $municipalDistrictFullName = Param::where('objectid', $municipalDistrict->objectid)
+//                        ->where('typeid', 16) // Офф. наименование
+//                        ->where('enddate', '>', now())
+//                        ->first();
+//
+//                    $municipalDistrictFullName = $municipalDistrictFullName ? $municipalDistrictFullName->value : null;
+//
+//                    Municipality::updateOrCreate(
+//                        ['objectid' => $municipalDistrict->objectid],
+//                        [
+//                            'objectid' => $municipalDistrict->objectid,
+//                            'objectguid' => $municipalDistrict->objectguid,
+//                            'name' => $municipalDistrict->name,
+//                            'name_full' => $municipalDistrictFullName,
+//                            'typename' => $municipalDistrict->typename,
+//                            'updatedate' => $municipalDistrict->updatedate,
+//                            'enddate' => $municipalDistrict->enddate,
+//                            'isactual' => $municipalDistrict->isactual,
+//                            'isactive' => $municipalDistrict->isactive,
+//                        ]
+//                    );
+//                }
+//            }); // Уровень 3 — Муниципальные/городские округи/районы
+//
+//        /*
+//         * Города
+//         */
+//        AddrObj::query()
+//            ->where('level', 5)
+//            ->where('enddate', '>', now())
+//            ->chunk(300, function ($cities) {
+//                foreach ($cities as $city) {
+//                    Municipality::updateOrCreate(
+//                        ['objectid' => $city->objectid],
+//                        [
+//                            'objectid' => $city->objectid,
+//                            'objectguid' => $city->objectguid,
+//                            'name' => $city->name,
+//                            'typename' => $city->typename,
+//                            'typename_full' => $this->findFullType($city->typename),
+//                            'updatedate' => $city->updatedate,
+//                            'enddate' => $city->enddate,
+//                            'isactual' => $city->isactual,
+//                            'isactive' => $city->isactive,
+//                        ]
+//                    );
+//                }
+//            }); // Уровень 3 — Города
 
         return response()->json([
             'addresses' => $adms

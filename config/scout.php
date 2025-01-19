@@ -181,12 +181,16 @@ return [
         ],
         // 'max_total_results' => env('TYPESENSE_MAX_TOTAL_RESULTS', 1000),
         'model-settings' => [
-             \App\Models\Address::class => [
+             \App\Models\AdmAddress::class => [
                  'collection-schema' => [
                      'fields' => [
                          [
                              'name' => 'full_name',
                              'type' => 'string',
+                         ],
+                         [
+                             'name' => 'level',
+                             'type' => 'int32',
                          ],
                          [
                              'name' => 'created_at',
@@ -197,9 +201,6 @@ return [
                  ],
                  'search-parameters' => [
                      'query_by' => "full_name",
-                     'query_by_weights' => 0,
-                     'facet_sample_threshold' => 1000,
-                     'facet_sample_percent' => 20,
                  ],
              ],
         ],
