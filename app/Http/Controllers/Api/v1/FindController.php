@@ -109,11 +109,18 @@ class FindController extends Controller
 
     public function findAdm(Request $request)
     {
-        return AdmAddress::search($request->input('search'))->options([
-            'filter_by' => 'level:=5'
-        ])
+        $level = $request->input('level');
+
+        $options = collect();
+        if ($level) {
+            $options->push([
+                'filter_by' => "level:=$level"
+            ]);
+        }
+
+        return AdmAddress::search($request->input('search'))
+            ->options($options->toArray())
             ->get();
-        $adms = collect();
 
         /*
          * Регионы
