@@ -8,5 +8,5 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function () {
-    Route::get('/find', [\App\Http\Controllers\Api\v1\FindController::class, 'findAdm']);
+    Route::post('/find', [\App\Http\Controllers\Api\v1\FindController::class, 'findAdm']);
 });
