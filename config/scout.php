@@ -185,6 +185,18 @@ return [
                  'collection-schema' => [
                      'fields' => [
                          [
+                             'name' => 'objectid',
+                             'type' => 'int32',
+                         ],
+                         [
+                             'name' => 'regioncode',
+                             'type' => 'int32',
+                         ],
+                         [
+                             'name' => 'path',
+                             'type' => 'string',
+                         ],
+                         [
                              'name' => 'full_name',
                              'type' => 'string',
                          ],
@@ -193,7 +205,27 @@ return [
                              'type' => 'int32',
                          ],
                          [
+                             'name' => 'isactive',
+                             'type' => 'int32',
+                         ],
+                         [
+                             'name' => 'updatedate',
+                             'type' => 'int64',
+                         ],
+                         [
+                             'name' => 'startdate',
+                             'type' => 'int64',
+                         ],
+                         [
+                             'name' => 'enddate',
+                             'type' => 'int64',
+                         ],
+                         [
                              'name' => 'created_at',
+                             'type' => 'int64',
+                         ],
+                         [
+                             'name' => 'updated_at',
                              'type' => 'int64',
                          ],
                      ],
