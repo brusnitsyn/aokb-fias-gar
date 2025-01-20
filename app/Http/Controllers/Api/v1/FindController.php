@@ -7,6 +7,7 @@ use App\Models\Address;
 use App\Models\AddressObjInAddress;
 use App\Models\AdmAddress;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Liquetsoft\Fias\Laravel\LiquetsoftFiasBundle\Entity\AddrObj;
@@ -20,106 +21,31 @@ use Liquetsoft\Fias\Laravel\LiquetsoftFiasBundle\Entity\ReestrObjects;
 
 class FindController extends Controller
 {
-    public function __invoke(Request $request)
-    {
-        $search_string = (string)$request->input('search');
-        $searchArray = collect(explode(',', Str::trim($search_string)))->reverse();
-
-        foreach ($searchArray as $search) {
-            dd($search);
-        }
-
-        $addrs = AddrObj::query()
-            ->where('name', 'like', '%' . $search_string . '%')
-            ->get();
-
-        $addrs = MunHierarchy::query()
-            ->where('objectid', $addrs[0]->objectid)
-            ->get();
-
-//        dd($addrs);
-
-        $addrs->map(function ($addr) {
-            $addrIds = explode('.', $addr->path);
-            $addr->full_name = collect();
-
-            foreach ($addrIds as $addrId) {
-                $entity = ReestrObjects::query()
-                    ->where('objectid', $addrId)
-                    ->select(['levelid', 'isactive'])
-                    ->first();
-
-//                dd($entity);
-
-                if ($entity->levelid == 1) {
-                    $addrObj = AddrObj::query()
-                        ->where('objectid', $addrId)
-                        ->select(['name', 'typename'])
-                        ->first();
-
-                    $addr->full_name->push("$addrObj->name $addrObj->typename");
-                }
-
-                if ($entity->levelid == 3) {
-                    $addrObj = AddrObj::query()
-                        ->where('objectid', $addrId)
-                        ->select(['name', 'typename'])
-                        ->first();
-
-                    $addr->full_name->push("$addrObj->typename $addrObj->name");
-                }
-            }
-
-            $addr->full_name = $addr->full_name->implode(', ');
-        });
-
-        return response()->json([
-            '' => $addrs
-        ]);
-    }
-
-    private function findAddrObj(int $objectid)
-    {
-        return AddrObj::query()
-            ->where('objectid', $objectid)
-            ->first();
-    }
-
-    private function findHouse(int $objectid)
-    {
-        $house = Houses::query()
-            ->where('objectid', $objectid)
-            ->first();
-
-        dd($house);
-
-        $houseType = HouseTypes::query()
-            ->where('id', $house->housetype)
-            ->first();
-
-        return "$houseType->shortname $house->housenum";
-    }
-
-    private function findFullType(string $typename)
-    {
-        return AddrObjTypes::where('typename', $typename)
-            ->where('enddate', '>', now())
-            ->first();
-    }
-
     public function findAdm(Request $request)
     {
-        $level = $request->input('level');
+        $filterBy = $request->input('filter_by');
+        $sortBy = $request->input('sort_by');
 
-        $options = collect();
-        if ($level) {
-            $options->push([
-                'filter_by' => "level:=$level"
-            ]);
+        $options = [
+            'limit_hits' => 15
+        ];
+        if (is_array($filterBy) && count($filterBy) > 0) {
+            $filters = collect();
+            foreach ($filterBy as $key => $filter) {
+                $filters->push("$key:=$filter");
+            }
+            $filters = implode(" && ", $filters->values()->toArray());
+            $options['filter_by'] = "$filters";
+        }
+
+        if (is_array($sortBy) && count($sortBy) > 0) {
+            $sortByFilterKey = array_key_first($sortBy);
+            $sortByFilterValue = array_shift($sortBy);
+            $options['sort_by'] = "$sortByFilterKey:$sortByFilterValue";
         }
 
         return AdmAddress::search($request->input('search'))
-            ->options($options->toArray())
+            ->options($options)
             ->get();
 
         /*
@@ -209,9 +135,5 @@ class FindController extends Controller
 //                    );
 //                }
 //            }); // Уровень 3 — Города
-
-        return response()->json([
-            'addresses' => $adms
-        ]);
     }
 }
