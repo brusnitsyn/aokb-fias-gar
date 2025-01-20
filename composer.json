@@ -1,8 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "aokb/fias-gar",
+    "version": "1.0",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "База для работы с адресами Амурской Области",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
