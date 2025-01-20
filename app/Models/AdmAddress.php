@@ -34,6 +34,7 @@ class AdmAddress extends Model
 
                 'objectid' => (integer) $this->objectid,
                 'parentobjid' => (integer) $this->parentobjid,
+                'regioncode' => (integer) $this->regioncode,
                 'path' => (string) $this->path,
                 'full_name' => (string) $this->full_name,
                 'level' => (integer) $this->level,
