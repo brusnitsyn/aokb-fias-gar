@@ -9,4 +9,7 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('v1')->group(function () {
     Route::post('/find', [\App\Http\Controllers\Api\v1\FindController::class, 'findAdm']);
+    Route::prefix('{objectid}')->group(function () {
+        Route::get('district', [\App\Http\Controllers\Api\v1\FindController::class, 'getDistrict']);
+    });
 });

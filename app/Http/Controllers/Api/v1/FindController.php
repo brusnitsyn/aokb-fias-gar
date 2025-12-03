@@ -136,4 +136,15 @@ class FindController extends Controller
 //                }
 //            }); // Уровень 3 — Города
     }
+
+    public function getDistrict($objectid, Request $request)
+    {
+        $address = AdmAddress::where('objectid', $objectid)->firstOrFail();
+        $parentObj = AdmAddress::where('objectid', $address->parentobjid)->first();
+        if ($parentObj->level === 2) {
+            return response()->json($parentObj);
+        } else {
+            return response()->json($address);
+        }
+    }
 }
